@@ -22,6 +22,9 @@ async def api_create_event(event: EventCreate):
         description=event.description,
         event_date=event.event_date,
         host_name=event.host_name,
+        min_age=event.min_age,
+        max_age=event.max_age,
+        max_rounds=event.max_rounds,
     )
     return {
         "event_id": event_id,
@@ -38,10 +41,15 @@ async def form_create_event(
     description: str = Form(""),
     event_date: str = Form(...),
     host_name: str = Form(...),
+    min_age: int | None = Form(None),
+    max_age: int | None = Form(None),
+    max_rounds: int = Form(3),
 ):
     event_id = await create_event(
         name=name, event_type=event_type, description=description,
         event_date=event_date, host_name=host_name,
+        min_age=min_age or None, max_age=max_age or None,
+        max_rounds=max_rounds,
     )
     return RedirectResponse(url=f"/event/{event_id}", status_code=303)
 
@@ -57,6 +65,21 @@ async def event_dashboard(request: Request, event_id: str):
         "event": event,
         "stats": stats,
     })
+
+
+@router.get("/api/events/{event_id}/stats")
+async def event_stats(event_id: str):
+    event = await get_event(event_id)
+    if not event:
+        return JSONResponse({"error": "Event nicht gefunden"}, status_code=404)
+    stats = await get_event_stats(event_id)
+    return {
+        "status": event["status"],
+        "current_round": event.get("current_round", 0),
+        "max_rounds": event.get("max_rounds", 3),
+        "clues_sent": event.get("clues_sent", 0),
+        **stats,
+    }
 
 
 @router.post("/api/events/{event_id}/close")

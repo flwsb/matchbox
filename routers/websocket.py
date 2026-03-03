@@ -10,14 +10,25 @@ router = APIRouter()
 async def websocket_endpoint(websocket: WebSocket, event_id: str, guest_id: str):
     await manager.connect(event_id, guest_id, websocket)
     try:
-        # Check if match already exists (late joiner)
         event = await get_event(event_id)
-        if event and event["status"] == "revealed":
-            match = await get_match_for_guest(event_id, guest_id)
-            if match:
+        if event:
+            if event["status"] == "revealed":
+                # Late joiner: send match for current round
+                match = await get_match_for_guest(
+                    event_id, guest_id,
+                    round_number=event["current_round"]
+                )
+                if match:
+                    await websocket.send_json({
+                        "type": "reveal",
+                        "match": match,
+                    })
+            elif event["status"] == "clues":
+                # Late joiner during clues phase
                 await websocket.send_json({
-                    "type": "reveal",
-                    "match": match,
+                    "type": "clues_phase",
+                    "round": event["current_round"],
+                    "message": "Matching abgeschlossen! Hinweise folgen...",
                 })
 
         # Send current waiting status
@@ -30,7 +41,6 @@ async def websocket_endpoint(websocket: WebSocket, event_id: str, guest_id: str)
         # Keep connection alive
         while True:
             data = await websocket.receive_text()
-            # Ping/pong to keep alive
             if data == "ping":
                 await websocket.send_json({"type": "pong"})
     except WebSocketDisconnect:

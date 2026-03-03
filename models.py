@@ -7,6 +7,9 @@ class EventCreate(BaseModel):
     description: str = ""
     event_date: str
     host_name: str
+    min_age: int | None = None
+    max_age: int | None = None
+    max_rounds: int = 3
 
 
 class EventResponse(BaseModel):
@@ -19,6 +22,7 @@ class GuestCreate(BaseModel):
     name: str
     gender: str | None = None
     attracted_to: str | None = None
+    age: int | None = None
 
 
 class GuestResponse(BaseModel):

@@ -33,15 +33,39 @@ async def form_join_event(
     name: str = Form(...),
     gender: str = Form(None),
     attracted_to: str = Form(None),
+    age: int | None = Form(None),
 ):
     event = await get_event(event_id)
     if not event:
         return HTMLResponse("<h1>Event nicht gefunden</h1>", status_code=404)
 
+    # Age validation
+    min_age = event.get("min_age")
+    max_age = event.get("max_age")
+    if min_age is not None or max_age is not None:
+        if age is None:
+            return templates.TemplateResponse("join.html", {
+                "request": request,
+                "event": event,
+                "error": "Bitte gib dein Alter an.",
+            })
+        if min_age is not None and age < min_age:
+            return templates.TemplateResponse("join.html", {
+                "request": request,
+                "event": event,
+                "error": f"Du erfüllst leider nicht die Altersanforderungen für dieses Event ({min_age}–{max_age or '∞'} Jahre).",
+            })
+        if max_age is not None and age > max_age:
+            return templates.TemplateResponse("join.html", {
+                "request": request,
+                "event": event,
+                "error": f"Du erfüllst leider nicht die Altersanforderungen für dieses Event ({min_age or '0'}–{max_age} Jahre).",
+            })
+
     try:
         guest_id = await create_guest(
             event_id=event_id, name=name, gender=gender or None,
-            attracted_to=attracted_to or None,
+            attracted_to=attracted_to or None, age=age,
         )
     except Exception:
         return templates.TemplateResponse("join.html", {

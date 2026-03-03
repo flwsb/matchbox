@@ -3,14 +3,15 @@ from database import get_db
 
 
 async def create_guest(event_id: str, name: str, gender: str | None = None,
-                       attracted_to: str | None = None) -> str:
+                       attracted_to: str | None = None,
+                       age: int | None = None) -> str:
     guest_id = str(uuid.uuid4())
     db = await get_db()
     try:
         await db.execute(
-            "INSERT INTO guests (id, event_id, name, gender, attracted_to) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (guest_id, event_id, name, gender, attracted_to)
+            "INSERT INTO guests (id, event_id, name, gender, attracted_to, age) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (guest_id, event_id, name, gender, attracted_to, age)
         )
         await db.commit()
     finally:
