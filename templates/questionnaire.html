@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Fragebogen — {{ event.name }}{% endblock %}
+
+{% block content %}
+<div x-data="questionnaire()" x-init="init()">
+    <!-- Progress Bar -->
+    <div style="margin: 2rem 0;">
+        <progress :value="currentIndex + 1" :max="questions.length"
+                  style="width: 100%;"></progress>
+        <p style="text-align: center;">
+            <span x-text="currentIndex + 1"></span> / <span x-text="questions.length"></span>
+        </p>
+    </div>
+
+    <!-- Question Card -->
+    <article style="min-height: 300px; display: flex; flex-direction: column; justify-content: center;">
+        <h3 x-text="currentQuestion.text_de" style="text-align: center;"></h3>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 2rem;">
+            <template x-for="option in options" :key="option.value">
+                <button
+                    :class="answers[currentQuestion.id] === option.value ? '' : 'outline'"
+                    @click="selectAnswer(option.value)"
+                    x-text="option.label"
+                    style="width: 100%;">
+                </button>
+            </template>
+        </div>
+    </article>
+
+    <!-- Navigation -->
+    <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+        <button class="secondary outline" @click="prev()" x-show="currentIndex > 0">
+            Zurück
+        </button>
+        <div x-show="currentIndex === 0"></div>
+
+        <button @click="next()" x-show="currentIndex < questions.length - 1"
+                :disabled="!answers[currentQuestion.id]">
+            Weiter
+        </button>
+        <button @click="submitAnswers()" x-show="currentIndex === questions.length - 1"
+                :disabled="!allAnswered">
+            Abschicken
+        </button>
+    </div>
+
+    <!-- Hidden form for submission -->
+    <form id="answer-form" action="/event/{{ event.id }}/answers" method="post" style="display:none;">
+        <template x-for="q in questions" :key="q.id">
+            <input type="hidden" :name="'q_' + q.id" :value="answers[q.id] || ''">
+        </template>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function questionnaire() {
+    return {
+        questions: {{ questions | tojson }},
+        currentIndex: 0,
+        answers: {},
+        options: [
+            { value: 1, label: 'Stimme gar nicht zu' },
+            { value: 2, label: 'Stimme eher nicht zu' },
+            { value: 3, label: 'Neutral' },
+            { value: 4, label: 'Stimme eher zu' },
+            { value: 5, label: 'Stimme voll zu' },
+        ],
+        get currentQuestion() {
+            return this.questions[this.currentIndex] || {};
+        },
+        get allAnswered() {
+            return this.questions.every(q => this.answers[q.id]);
+        },
+        init() {},
+        selectAnswer(value) {
+            this.answers[this.currentQuestion.id] = value;
+            // Auto-advance after short delay
+            if (this.currentIndex < this.questions.length - 1) {
+                setTimeout(() => this.next(), 300);
+            }
+        },
+        next() {
+            if (this.currentIndex < this.questions.length - 1) {
+                this.currentIndex++;
+            }
+        },
+        prev() {
+            if (this.currentIndex > 0) {
+                this.currentIndex--;
+            }
+        },
+        submitAnswers() {
+            document.getElementById('answer-form').submit();
+        },
+    };
+}
+</script>
+{% endblock %}

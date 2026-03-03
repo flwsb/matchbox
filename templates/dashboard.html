@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}{{ event.name }} — Dashboard{% endblock %}
+
+{% block content %}
+<header style="text-align: center; padding: 2rem 0;">
+    <h1>{{ event.name }}</h1>
+    <p>Host: {{ event.host_name }} | {{ event.event_date }} |
+        {% if event.event_type == 'romantic' %}Romantisch{% else %}Professionell{% endif %}
+    </p>
+</header>
+
+<div x-data="dashboard()" x-init="init()">
+    <!-- Join Link -->
+    <article>
+        <h3>Einladungslink</h3>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" id="join-link" readonly
+                   x-bind:value="joinUrl"
+                   style="flex: 1;">
+            <button class="outline" @click="copyLink()">Kopieren</button>
+        </div>
+        <small x-show="copied" x-transition style="color: var(--pico-color-green-500);">Link kopiert!</small>
+    </article>
+
+    <!-- Stats -->
+    <article>
+        <h3>Status</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; text-align: center;">
+            <div>
+                <h2 x-text="stats.total_guests">{{ stats.total_guests }}</h2>
+                <p>Registrierte Gäste</p>
+            </div>
+            <div>
+                <h2 x-text="stats.completed_questionnaire">{{ stats.completed_questionnaire }}</h2>
+                <p>Fragebogen abgeschlossen</p>
+            </div>
+        </div>
+        <p>Event-Status: <strong x-text="eventStatus">{{ event.status }}</strong></p>
+    </article>
+
+    <!-- Actions -->
+    <article>
+        <h3>Aktionen</h3>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <button @click="closeEvent()" x-show="eventStatus === 'open'" class="secondary">
+                Event schliessen
+            </button>
+            <button @click="runMatching()" x-show="eventStatus === 'open' || eventStatus === 'closed'">
+                Matching starten & Reveal
+            </button>
+            <p x-show="eventStatus === 'revealed'" style="color: var(--pico-color-green-500);">
+                Matches wurden enthüllt!
+            </p>
+        </div>
+        <p x-show="matchingResult" x-text="matchingResult" style="margin-top: 1rem;"></p>
+    </article>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function dashboard() {
+    return {
+        eventId: '{{ event.id }}',
+        joinUrl: '',
+        copied: false,
+        eventStatus: '{{ event.status }}',
+        matchingResult: '',
+        stats: {
+            total_guests: {{ stats.total_guests }},
+            completed_questionnaire: {{ stats.completed_questionnaire }},
+        },
+        init() {
+            this.joinUrl = window.location.origin + '/event/' + this.eventId + '/join';
+            this.pollStats();
+        },
+        async copyLink() {
+            await navigator.clipboard.writeText(this.joinUrl);
+            this.copied = true;
+            setTimeout(() => this.copied = false, 2000);
+        },
+        async closeEvent() {
+            const resp = await fetch(`/api/events/${this.eventId}/close`, { method: 'POST' });
+            if (resp.ok) this.eventStatus = 'closed';
+        },
+        async runMatching() {
+            this.matchingResult = 'Matching läuft...';
+            const resp = await fetch(`/api/events/${this.eventId}/match`, { method: 'POST' });
+            const data = await resp.json();
+            if (data.error) {
+                this.matchingResult = 'Fehler: ' + data.error;
+            } else {
+                this.eventStatus = 'revealed';
+                this.matchingResult = `${data.matches_count} Matches erstellt! Reveal läuft...`;
+            }
+        },
+        async pollStats() {
+            // Simple polling every 5 seconds
+            setInterval(async () => {
+                try {
+                    const resp = await fetch(`/event/${this.eventId}`, {
+                        headers: { 'Accept': 'application/json' }
+                    });
+                } catch (e) {}
+            }, 5000);
+        },
+    };
+}
+</script>
+{% endblock %}

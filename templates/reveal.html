@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Match Reveal — {{ event.name }}{% endblock %}
+
+{% block content %}
+<div x-data="reveal()" x-init="init()">
+    <!-- Waiting Phase -->
+    <div x-show="phase === 'waiting'" style="text-align: center; padding: 4rem 0;">
+        <h1>Warte auf den Reveal...</h1>
+        <p>Du bist dabei! Sobald der Host das Matching startet, geht es los.</p>
+        <p><span x-text="connectedCount"></span> Gäste verbunden</p>
+        <div aria-busy="true" style="margin: 2rem auto;"></div>
+    </div>
+
+    <!-- Countdown Phase -->
+    <div x-show="phase === 'countdown'" style="text-align: center; padding: 4rem 0;">
+        <p style="font-size: 1.2rem; margin-bottom: 1rem;">Dein Match wird enthüllt in...</p>
+        <div class="countdown-number" x-text="countdown"></div>
+    </div>
+
+    <!-- Reveal Phase -->
+    <div x-show="phase === 'reveal'" style="text-align: center; padding: 2rem 0;">
+        <h2 style="margin-bottom: 2rem;">Dein Match</h2>
+
+        <article class="match-card" x-show="match">
+            <div class="match-card-inner" :class="{ 'flipped': showMatch }">
+                <div class="match-card-front">
+                    <h2>?</h2>
+                </div>
+                <div class="match-card-back">
+                    <h1 x-text="match?.name" style="margin-bottom: 0.5rem;"></h1>
+                    <p style="font-size: 2rem; margin: 1rem 0;">
+                        <span x-text="Math.round((match?.compatibility_score || 0) * 100)"></span>%
+                        <small>Kompatibilität</small>
+                    </p>
+                    <p>
+                        <span x-text="matchTypeLabel"></span>
+                    </p>
+                    <div x-show="match?.top_shared_values?.length" style="margin-top: 1rem;">
+                        <p><small>Gemeinsame Stärken:</small></p>
+                        <template x-for="val in (match?.top_shared_values || [])" :key="val">
+                            <kbd x-text="val" style="margin: 0.25rem;"></kbd>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <div x-show="!match && phase === 'reveal'" style="margin-top: 2rem;">
+            <p>Leider kein Match in dieser Runde. Aber du bist trotzdem grossartig!</p>
+        </div>
+    </div>
+
+    <!-- Confetti -->
+    <div x-show="showConfetti" class="confetti-container">
+        <template x-for="i in 50">
+            <div class="confetti-piece"
+                 :style="`left: ${Math.random() * 100}%; animation-delay: ${Math.random() * 3}s; background: hsl(${Math.random() * 360}, 80%, 60%);`">
+            </div>
+        </template>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function reveal() {
+    return {
+        phase: '{{ "reveal" if existing_match else "waiting" }}',
+        countdown: 0,
+        connectedCount: 0,
+        match: {{ existing_match | tojson if existing_match else 'null' }},
+        showMatch: {{ 'true' if existing_match else 'false' }},
+        showConfetti: {{ 'true' if existing_match else 'false' }},
+        ws: null,
+        get matchTypeLabel() {
+            const types = {
+                'romantic': 'Romantisches Match',
+                'professional': 'Professionelles Match',
+                'friendship': 'Freundschafts-Match',
+            };
+            return types[this.match?.match_type] || '';
+        },
+        init() {
+            if (this.phase === 'reveal') return; // Already have match
+            this.connectWebSocket();
+        },
+        connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/event/{{ event.id }}/{{ guest.id }}`;
+            this.ws = new WebSocket(wsUrl);
+
+            this.ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                this.handleMessage(data);
+            };
+
+            this.ws.onclose = () => {
+                // Reconnect after 2 seconds
+                setTimeout(() => this.connectWebSocket(), 2000);
+            };
+
+            // Keep alive
+            setInterval(() => {
+                if (this.ws?.readyState === WebSocket.OPEN) {
+                    this.ws.send('ping');
+                }
+            }, 30000);
+        },
+        handleMessage(data) {
+            switch (data.type) {
+                case 'waiting':
+                    this.connectedCount = data.guests_connected;
+                    break;
+                case 'countdown':
+                    this.phase = 'countdown';
+                    this.countdown = data.seconds_remaining;
+                    break;
+                case 'reveal':
+                    this.phase = 'reveal';
+                    this.match = data.match;
+                    // Card flip animation after short delay
+                    setTimeout(() => {
+                        this.showMatch = true;
+                        this.showConfetti = true;
+                    }, 500);
+                    break;
+                case 'pong':
+                    break;
+            }
+        },
+    };
+}
+</script>
+{% endblock %}

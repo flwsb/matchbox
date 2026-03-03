@@ -1,0 +1,122 @@
+/* Matchbox Custom Styles */
+
+/* Countdown number */
+.countdown-number {
+    font-size: 8rem;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--pico-primary);
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+/* Match Card */
+.match-card {
+    perspective: 1000px;
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.match-card-inner {
+    position: relative;
+    width: 100%;
+    min-height: 300px;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+}
+
+.match-card-inner.flipped {
+    transform: rotateY(180deg);
+}
+
+.match-card-front,
+.match-card-back {
+    position: absolute;
+    width: 100%;
+    min-height: 300px;
+    backface-visibility: hidden;
+    border-radius: var(--pico-border-radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.match-card-front {
+    background: linear-gradient(135deg, var(--pico-primary), var(--pico-primary-focus));
+    color: white;
+}
+
+.match-card-front h2 {
+    font-size: 6rem;
+    margin: 0;
+    color: white;
+}
+
+.match-card-back {
+    background: var(--pico-card-background-color);
+    border: 2px solid var(--pico-primary);
+    transform: rotateY(180deg);
+}
+
+/* Confetti */
+.confetti-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1000;
+}
+
+.confetti-piece {
+    position: absolute;
+    top: -10px;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    animation: confetti-fall 4s ease-in-out forwards;
+}
+
+@keyframes confetti-fall {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+/* Question card transitions */
+article {
+    transition: opacity 0.3s ease;
+}
+
+/* Likert buttons */
+button {
+    transition: all 0.2s ease;
+}
+
+/* Mobile improvements */
+@media (max-width: 768px) {
+    .countdown-number {
+        font-size: 5rem;
+    }
+
+    .match-card-front h2 {
+        font-size: 4rem;
+    }
+}

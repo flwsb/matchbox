@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ event.name }} — Beitreten{% endblock %}
+
+{% block content %}
+<header style="text-align: center; padding: 2rem 0;">
+    <h1>{{ event.name }}</h1>
+    <p>{{ event.description }}</p>
+    <p><small>{{ event.event_date }} | Veranstaltet von {{ event.host_name }}</small></p>
+</header>
+
+<article x-data="{ eventType: '{{ event.event_type }}' }">
+    <h2>Teilnehmen</h2>
+
+    {% if error %}
+    <p style="color: var(--pico-color-red-500);">{{ error }}</p>
+    {% endif %}
+
+    <form action="/event/{{ event.id }}/join" method="post">
+        <label for="name">Dein Name</label>
+        <input type="text" id="name" name="name" placeholder="Dein Vorname" required>
+
+        <template x-if="eventType === 'romantic'">
+            <div>
+                <label for="gender">Geschlecht</label>
+                <select id="gender" name="gender" required>
+                    <option value="">Bitte wählen...</option>
+                    <option value="male">Männlich</option>
+                    <option value="female">Weiblich</option>
+                    <option value="non-binary">Non-binär</option>
+                </select>
+
+                <label for="attracted_to">Ich interessiere mich für</label>
+                <select id="attracted_to" name="attracted_to" required>
+                    <option value="">Bitte wählen...</option>
+                    <option value="male">Männer</option>
+                    <option value="female">Frauen</option>
+                    <option value="everyone">Alle</option>
+                </select>
+            </div>
+        </template>
+
+        <button type="submit">Beitreten & Fragebogen starten</button>
+    </form>
+</article>
+{% endblock %}
