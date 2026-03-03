@@ -2,57 +2,77 @@
 {% block title %}{{ event.name }} — Dashboard{% endblock %}
 
 {% block content %}
-<header style="text-align: center; padding: 2rem 0;">
+<section class="mb-event-banner">
     <h1>{{ event.name }}</h1>
-    <p>Host: {{ event.host_name }} | {{ event.event_date }} |
-        {% if event.event_type == 'romantic' %}Romantisch{% else %}Professionell{% endif %}
-    </p>
-</header>
+    <div class="mb-event-meta">
+        <span class="mb-meta-chip">👤 {{ event.host_name }}</span>
+        <span class="mb-meta-chip">📅 {{ event.event_date }}</span>
+        <span class="mb-meta-chip">
+            {% if event.event_type == 'romantic' %}💕 Romantisch{% else %}🤝 Professionell{% endif %}
+        </span>
+    </div>
+    {% if event.min_age or event.max_age %}
+    <p><small>Altersbereich: {{ event.min_age or '—' }} – {{ event.max_age or '—' }} Jahre</small></p>
+    {% endif %}
+</section>
 
 <div x-data="dashboard()" x-init="init()">
     <!-- Join Link -->
     <article>
         <h3>Einladungslink</h3>
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <input type="text" id="join-link" readonly
-                   x-bind:value="joinUrl"
-                   style="flex: 1;">
+        <div class="mb-invite-row">
+            <input type="text" id="join-link" readonly x-bind:value="joinUrl">
             <button class="outline" @click="copyLink()">Kopieren</button>
         </div>
-        <small x-show="copied" x-transition style="color: var(--pico-color-green-500);">Link kopiert!</small>
+        <small x-show="copied" x-transition class="mb-text-success">Link kopiert!</small>
     </article>
 
     <!-- Stats -->
     <article>
         <h3>Status</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; text-align: center;">
-            <div>
-                <h2 x-text="stats.total_guests">{{ stats.total_guests }}</h2>
-                <p>Registrierte Gäste</p>
+        <div class="mb-stats-grid">
+            <div class="mb-stat-card">
+                <div class="mb-stat-number" x-text="stats.total_guests">{{ stats.total_guests }}</div>
+                <div class="mb-stat-label">Registrierte Gäste</div>
             </div>
-            <div>
-                <h2 x-text="stats.completed_questionnaire">{{ stats.completed_questionnaire }}</h2>
-                <p>Fragebogen abgeschlossen</p>
+            <div class="mb-stat-card">
+                <div class="mb-stat-number" x-text="stats.completed_questionnaire">{{ stats.completed_questionnaire }}</div>
+                <div class="mb-stat-label">Fragebogen abgeschlossen</div>
             </div>
         </div>
-        <p>Event-Status: <strong x-text="eventStatus">{{ event.status }}</strong></p>
+        <p>Event-Status: <span class="mb-status-badge" :class="'mb-status-' + eventStatus" x-text="eventStatus">{{ event.status }}</span></p>
+        <p>Runde: <strong x-text="currentRound + ' / ' + maxRounds"></strong></p>
     </article>
 
     <!-- Actions -->
     <article>
         <h3>Aktionen</h3>
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <div class="mb-actions-row">
             <button @click="closeEvent()" x-show="eventStatus === 'open'" class="secondary">
                 Event schliessen
             </button>
-            <button @click="runMatching()" x-show="eventStatus === 'open' || eventStatus === 'closed'">
-                Matching starten & Reveal
+
+            <button @click="runMatching()"
+                    x-show="currentRound < maxRounds && (eventStatus === 'open' || eventStatus === 'closed' || eventStatus === 'revealed')">
+                <span x-text="currentRound === 0 ? 'Matching starten' : 'Nächste Runde (Runde ' + (currentRound + 1) + ')'"></span>
             </button>
-            <p x-show="eventStatus === 'revealed'" style="color: var(--pico-color-green-500);">
-                Matches wurden enthüllt!
+
+            <template x-if="eventStatus === 'clues'">
+                <div class="mb-actions-row">
+                    <button @click="sendClue()" x-show="cluesSent < 3" class="secondary">
+                        Hinweis senden (<span x-text="cluesSent"></span>/3)
+                    </button>
+                    <button @click="triggerReveal()">
+                        Reveal starten
+                    </button>
+                </div>
+            </template>
+
+            <p x-show="eventStatus === 'revealed' && currentRound >= maxRounds" class="mb-text-success">
+                Alle Runden abgeschlossen!
             </p>
         </div>
-        <p x-show="matchingResult" x-text="matchingResult" style="margin-top: 1rem;"></p>
+        <p x-show="matchingResult" x-text="matchingResult" class="mb-mt-1"></p>
     </article>
 </div>
 {% endblock %}
@@ -66,6 +86,9 @@ function dashboard() {
         copied: false,
         eventStatus: '{{ event.status }}',
         matchingResult: '',
+        currentRound: {{ event.current_round }},
+        maxRounds: {{ event.max_rounds }},
+        cluesSent: {{ event.clues_sent }},
         stats: {
             total_guests: {{ stats.total_guests }},
             completed_questionnaire: {{ stats.completed_questionnaire }},
@@ -90,17 +113,44 @@ function dashboard() {
             if (data.error) {
                 this.matchingResult = 'Fehler: ' + data.error;
             } else {
+                this.eventStatus = 'clues';
+                this.currentRound = data.round;
+                this.cluesSent = 0;
+                this.matchingResult = `${data.matches_count} Matches erstellt! Hinweis-Phase aktiv.`;
+            }
+        },
+        async sendClue() {
+            const resp = await fetch(`/api/events/${this.eventId}/send-clue`, { method: 'POST' });
+            const data = await resp.json();
+            if (data.error) {
+                this.matchingResult = 'Fehler: ' + data.error;
+            } else {
+                this.cluesSent = data.clue_number;
+                this.matchingResult = `Hinweis ${data.clue_number} gesendet!`;
+            }
+        },
+        async triggerReveal() {
+            const resp = await fetch(`/api/events/${this.eventId}/reveal`, { method: 'POST' });
+            const data = await resp.json();
+            if (data.error) {
+                this.matchingResult = 'Fehler: ' + data.error;
+            } else {
                 this.eventStatus = 'revealed';
-                this.matchingResult = `${data.matches_count} Matches erstellt! Reveal läuft...`;
+                this.matchingResult = `Reveal läuft...`;
             }
         },
         async pollStats() {
-            // Simple polling every 5 seconds
             setInterval(async () => {
                 try {
-                    const resp = await fetch(`/event/${this.eventId}`, {
-                        headers: { 'Accept': 'application/json' }
-                    });
+                    const resp = await fetch(`/api/events/${this.eventId}/stats`);
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        this.stats.total_guests = data.total_guests;
+                        this.stats.completed_questionnaire = data.completed_questionnaire;
+                        this.eventStatus = data.status;
+                        this.currentRound = data.current_round;
+                        this.cluesSent = data.clues_sent;
+                    }
                 } catch (e) {}
             }, 5000);
         },

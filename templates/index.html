@@ -2,13 +2,31 @@
 {% block title %}Matchbox — Event erstellen{% endblock %}
 
 {% block content %}
-<header style="text-align: center; padding: 2rem 0;">
-    <h1>Matchbox</h1>
-    <p>Bringe deine Community zusammen. Erstelle ein Event und finde die besten Matches.</p>
-</header>
+<section class="mb-hero">
+    <h1 class="mb-hero-title">Matchbox</h1>
+    <p class="mb-hero-subtitle">
+        Bringe deine Community zusammen. Erstelle ein Event und finde die besten Matches.
+    </p>
+    <div class="mb-hero-features">
+        <div class="mb-feature-chip">
+            <span class="mb-feature-icon">🎯</span>
+            <span>Algorithmus-basiertes Matching</span>
+        </div>
+        <div class="mb-feature-chip">
+            <span class="mb-feature-icon">⚡</span>
+            <span>Echtzeit-Reveal</span>
+        </div>
+        <div class="mb-feature-chip">
+            <span class="mb-feature-icon">🤝</span>
+            <span>Romantisch & Professionell</span>
+        </div>
+    </div>
+</section>
 
-<article>
-    <h2>Neues Event erstellen</h2>
+<article class="mb-form-card">
+    <header>
+        <h2>Neues Event erstellen</h2>
+    </header>
     <form action="/event/create" method="post">
         <label for="name">Event-Name</label>
         <input type="text" id="name" name="name" placeholder="z.B. Freitagabend Mixer" required>
@@ -28,7 +46,20 @@
         <label for="host_name">Dein Name (Host)</label>
         <input type="text" id="host_name" name="host_name" placeholder="Dein Name" required>
 
-        <button type="submit">Event erstellen</button>
+        <label for="max_rounds">Anzahl Runden</label>
+        <select id="max_rounds" name="max_rounds">
+            <option value="1">1 Runde</option>
+            <option value="2">2 Runden</option>
+            <option value="3" selected>3 Runden</option>
+        </select>
+
+        <label for="min_age">Mindestalter (optional)</label>
+        <input type="number" id="min_age" name="min_age" min="1" max="120" placeholder="z.B. 18">
+
+        <label for="max_age">Höchstalter (optional)</label>
+        <input type="number" id="max_age" name="max_age" min="1" max="120" placeholder="z.B. 35">
+
+        <button type="submit" class="mb-btn-primary">Event erstellen</button>
     </form>
 </article>
 {% endblock %}

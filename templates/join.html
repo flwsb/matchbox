@@ -2,17 +2,22 @@
 {% block title %}{{ event.name }} — Beitreten{% endblock %}
 
 {% block content %}
-<header style="text-align: center; padding: 2rem 0;">
+<section class="mb-event-banner">
     <h1>{{ event.name }}</h1>
-    <p>{{ event.description }}</p>
-    <p><small>{{ event.event_date }} | Veranstaltet von {{ event.host_name }}</small></p>
-</header>
+    <p class="mb-event-description">{{ event.description }}</p>
+    <div class="mb-event-meta">
+        <span class="mb-meta-chip">📅 {{ event.event_date }}</span>
+        <span class="mb-meta-chip">👤 {{ event.host_name }}</span>
+    </div>
+</section>
 
-<article x-data="{ eventType: '{{ event.event_type }}' }">
-    <h2>Teilnehmen</h2>
+<article class="mb-form-card" x-data="{ eventType: '{{ event.event_type }}' }">
+    <header>
+        <h2>Teilnehmen</h2>
+    </header>
 
     {% if error %}
-    <p style="color: var(--pico-color-red-500);">{{ error }}</p>
+    <div class="mb-alert mb-alert-error">{{ error }}</div>
     {% endif %}
 
     <form action="/event/{{ event.id }}/join" method="post">
@@ -39,7 +44,13 @@
             </div>
         </template>
 
-        <button type="submit">Beitreten & Fragebogen starten</button>
+        {% if event.min_age or event.max_age %}
+        <label for="age">Dein Alter</label>
+        <input type="number" id="age" name="age" min="1" max="120" placeholder="Dein Alter" required>
+        <small>Altersbereich: {{ event.min_age or '—' }} – {{ event.max_age or '—' }} Jahre</small>
+        {% endif %}
+
+        <button type="submit" class="mb-btn-primary">Beitreten & Fragebogen starten</button>
     </form>
 </article>
 {% endblock %}

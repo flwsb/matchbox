@@ -1,17 +1,54 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="light">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Matchbox{% endblock %}</title>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="/static/css/styles.css">
+
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body>
+<body x-data="{ darkMode: localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') }"
+      x-init="$watch('darkMode', val => { document.documentElement.setAttribute('data-theme', val); localStorage.setItem('theme', val); })"
+      x-effect="document.documentElement.setAttribute('data-theme', darkMode)">
+
+    <nav class="container mb-nav">
+        <ul>
+            <li>
+                <a href="/" class="mb-brand">
+                    <span class="mb-brand-icon">🔥</span>
+                    <strong>Matchbox</strong>
+                </a>
+            </li>
+        </ul>
+        <ul>
+            <li>
+                <button class="mb-theme-toggle outline secondary"
+                        @click="darkMode = darkMode === 'light' ? 'dark' : 'light'"
+                        aria-label="Theme wechseln">
+                    <span x-show="darkMode === 'light'">🌙</span>
+                    <span x-show="darkMode === 'dark'">☀️</span>
+                </button>
+            </li>
+        </ul>
+    </nav>
+
     <main class="container">
         {% block content %}{% endblock %}
     </main>
+
+    <footer class="container mb-footer">
+        <small>Matchbox — Bringe Menschen zusammen.</small>
+    </footer>
+
     {% block scripts %}{% endblock %}
 </body>
 </html>

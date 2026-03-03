@@ -3,23 +3,47 @@
 
 {% block content %}
 <div x-data="reveal()" x-init="init()">
+    <!-- Round indicator -->
+    <div class="mb-round-indicator" x-show="currentRound > 0">
+        <small>Runde <span x-text="currentRound"></span> von <span x-text="maxRounds"></span></small>
+    </div>
+
     <!-- Waiting Phase -->
-    <div x-show="phase === 'waiting'" style="text-align: center; padding: 4rem 0;">
+    <div x-show="phase === 'waiting'" class="mb-phase-section">
+        <span class="mb-waiting-icon">🔥</span>
         <h1>Warte auf den Reveal...</h1>
         <p>Du bist dabei! Sobald der Host das Matching startet, geht es los.</p>
         <p><span x-text="connectedCount"></span> Gäste verbunden</p>
-        <div aria-busy="true" style="margin: 2rem auto;"></div>
+        <div aria-busy="true" class="mb-loader"></div>
+    </div>
+
+    <!-- Clues Phase -->
+    <div x-show="phase === 'clues'" class="mb-phase-section mb-phase-compact">
+        <h2>Hinweise zu deinem Match</h2>
+        <p>Der Host sendet dir Hinweise. Schau dich um — wer könnte es sein?</p>
+
+        <div class="mb-clues-container">
+            <template x-for="(clue, i) in clues" :key="i">
+                <article class="clue-card">
+                    <strong>Hinweis <span x-text="clue.number"></span>:</strong>
+                    <span x-text="clue.text"></span>
+                </article>
+            </template>
+        </div>
+
+        <div x-show="clues.length === 0" aria-busy="true" class="mb-loader"></div>
+        <p><small>Warte auf den Reveal...</small></p>
     </div>
 
     <!-- Countdown Phase -->
-    <div x-show="phase === 'countdown'" style="text-align: center; padding: 4rem 0;">
-        <p style="font-size: 1.2rem; margin-bottom: 1rem;">Dein Match wird enthüllt in...</p>
+    <div x-show="phase === 'countdown'" class="mb-phase-section">
+        <p class="mb-countdown-label">Dein Match wird enthüllt in...</p>
         <div class="countdown-number" x-text="countdown"></div>
     </div>
 
     <!-- Reveal Phase -->
-    <div x-show="phase === 'reveal'" style="text-align: center; padding: 2rem 0;">
-        <h2 style="margin-bottom: 2rem;">Dein Match</h2>
+    <div x-show="phase === 'reveal'" class="mb-phase-section mb-phase-compact">
+        <h2 class="mb-reveal-heading">Dein Match</h2>
 
         <article class="match-card" x-show="match">
             <div class="match-card-inner" :class="{ 'flipped': showMatch }">
@@ -27,34 +51,66 @@
                     <h2>?</h2>
                 </div>
                 <div class="match-card-back">
-                    <h1 x-text="match?.name" style="margin-bottom: 0.5rem;"></h1>
-                    <p style="font-size: 2rem; margin: 1rem 0;">
+                    <h1 class="mb-match-name" x-text="match?.name"></h1>
+                    <p class="mb-match-score">
                         <span x-text="Math.round((match?.compatibility_score || 0) * 100)"></span>%
                         <small>Kompatibilität</small>
                     </p>
                     <p>
                         <span x-text="matchTypeLabel"></span>
                     </p>
-                    <div x-show="match?.top_shared_values?.length" style="margin-top: 1rem;">
+                    <div x-show="match?.top_shared_values?.length" class="mb-mt-1">
                         <p><small>Gemeinsame Stärken:</small></p>
                         <template x-for="val in (match?.top_shared_values || [])" :key="val">
-                            <kbd x-text="val" style="margin: 0.25rem;"></kbd>
+                            <span class="mb-tag" x-text="val"></span>
+                        </template>
+                    </div>
+
+                    <!-- Match Insights -->
+                    <div x-show="showInsights && match?.insights?.insight_sentences?.length"
+                         x-transition
+                         class="mb-insights-section">
+                        <h4>Warum ihr zusammenpasst</h4>
+
+                        <template x-for="(cat, key) in (match?.insights?.category_scores || {})" :key="key">
+                            <div class="mb-insight-category">
+                                <small x-text="cat.label"></small>
+                                <progress class="mb-insight-bar" :value="cat.score" max="1"></progress>
+                            </div>
+                        </template>
+
+                        <template x-for="sentence in (match?.insights?.insight_sentences || [])" :key="sentence">
+                            <p class="mb-insight-text">
+                                <span x-text="sentence"></span>
+                            </p>
                         </template>
                     </div>
                 </div>
             </div>
         </article>
 
-        <div x-show="!match && phase === 'reveal'" style="margin-top: 2rem;">
+        <div x-show="!match && phase === 'reveal'" class="mb-no-match">
             <p>Leider kein Match in dieser Runde. Aber du bist trotzdem grossartig!</p>
         </div>
+    </div>
+
+    <!-- Match History (previous rounds) -->
+    <div x-show="allMatches.length > 1" class="mb-match-history">
+        <h3>Deine bisherigen Matches</h3>
+        <template x-for="(m, i) in allMatches" :key="i">
+            <article class="mb-history-item">
+                <strong>Runde <span x-text="m.round"></span>:</strong>
+                <span x-text="m.name"></span> —
+                <span x-text="Math.round(m.compatibility_score * 100)"></span>% Kompatibilität
+            </article>
+        </template>
     </div>
 
     <!-- Confetti -->
     <div x-show="showConfetti" class="confetti-container">
         <template x-for="i in 50">
             <div class="confetti-piece"
-                 :style="`left: ${Math.random() * 100}%; animation-delay: ${Math.random() * 3}s; background: hsl(${Math.random() * 360}, 80%, 60%);`">
+                 :style="`left: ${Math.random() * 100}%; animation-delay: ${Math.random() * 3}s; background: ${['#E8553A','#F59E0B','#8B5CF6','#22C55E','#EC4899'][i % 5]};`">
             </div>
         </template>
     </div>
@@ -71,6 +127,11 @@ function reveal() {
         match: {{ existing_match | tojson if existing_match else 'null' }},
         showMatch: {{ 'true' if existing_match else 'false' }},
         showConfetti: {{ 'true' if existing_match else 'false' }},
+        showInsights: {{ 'true' if existing_match else 'false' }},
+        clues: [],
+        currentRound: {{ event.current_round }},
+        maxRounds: {{ event.max_rounds }},
+        allMatches: {{ all_matches | tojson if all_matches else '[]' }},
         ws: null,
         get matchTypeLabel() {
             const types = {
@@ -81,7 +142,6 @@ function reveal() {
             return types[this.match?.match_type] || '';
         },
         init() {
-            if (this.phase === 'reveal') return; // Already have match
             this.connectWebSocket();
         },
         connectWebSocket() {
@@ -95,11 +155,9 @@ function reveal() {
             };
 
             this.ws.onclose = () => {
-                // Reconnect after 2 seconds
                 setTimeout(() => this.connectWebSocket(), 2000);
             };
 
-            // Keep alive
             setInterval(() => {
                 if (this.ws?.readyState === WebSocket.OPEN) {
                     this.ws.send('ping');
@@ -111,18 +169,44 @@ function reveal() {
                 case 'waiting':
                     this.connectedCount = data.guests_connected;
                     break;
+                case 'clues_phase':
+                    this.phase = 'clues';
+                    this.clues = [];
+                    this.currentRound = data.round || this.currentRound;
+                    this.showMatch = false;
+                    this.showConfetti = false;
+                    this.showInsights = false;
+                    break;
+                case 'clue':
+                    if (this.phase !== 'clues') this.phase = 'clues';
+                    this.clues.push({ number: data.clue_number, text: data.clue_text });
+                    break;
                 case 'countdown':
                     this.phase = 'countdown';
                     this.countdown = data.seconds_remaining;
+                    if (data.round) this.currentRound = data.round;
                     break;
                 case 'reveal':
                     this.phase = 'reveal';
                     this.match = data.match;
+                    // Save to history
+                    if (data.match) {
+                        this.allMatches.push({
+                            name: data.match.name,
+                            compatibility_score: data.match.compatibility_score,
+                            match_type: data.match.match_type,
+                            round: data.match.round || this.currentRound,
+                        });
+                    }
                     // Card flip animation after short delay
                     setTimeout(() => {
                         this.showMatch = true;
                         this.showConfetti = true;
                     }, 500);
+                    // Show insights after card flip
+                    setTimeout(() => {
+                        this.showInsights = true;
+                    }, 2000);
                     break;
                 case 'pong':
                     break;
