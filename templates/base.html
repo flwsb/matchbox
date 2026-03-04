@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Matchbox{% endblock %}</title>
 
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="/static/css/styles.css">
@@ -20,22 +20,49 @@
       x-init="$watch('darkMode', val => { document.documentElement.setAttribute('data-theme', val); localStorage.setItem('theme', val); })"
       x-effect="document.documentElement.setAttribute('data-theme', darkMode)">
 
+    {% from "icons.html" import icon_logo, icon_sun, icon_moon %}
+
     <nav class="container mb-nav">
         <ul>
             <li>
                 <a href="/" class="mb-brand">
-                    <span class="mb-brand-icon">🔥</span>
+                    <span class="mb-brand-icon">{{ icon_logo(20) }}</span>
                     <strong>Matchbox</strong>
                 </a>
             </li>
         </ul>
-        <ul>
+        <ul class="mb-nav-links">
+            {% if user %}
+            <li>
+                <a href="/meine-events" class="mb-btn-nav mb-btn-nav-outline">Meine Events</a>
+            </li>
+            {% if user.role == 'admin' %}
+            <li>
+                <a href="/admin" class="mb-btn-nav mb-btn-nav-outline">Admin</a>
+            </li>
+            {% endif %}
+            <li class="mb-nav-user">
+                <strong>{{ user.display_name }}</strong>
+            </li>
+            <li>
+                <form action="/abmelden" method="post" class="mb-inline-form">
+                    <button type="submit" class="mb-btn-nav mb-btn-nav-outline">Abmelden</button>
+                </form>
+            </li>
+            {% else %}
+            <li>
+                <a href="/anmelden" class="mb-btn-nav mb-btn-nav-outline">Anmelden</a>
+            </li>
+            <li>
+                <a href="/registrieren" class="mb-btn-nav mb-btn-nav-primary">Registrieren</a>
+            </li>
+            {% endif %}
             <li>
                 <button class="mb-theme-toggle outline secondary"
                         @click="darkMode = darkMode === 'light' ? 'dark' : 'light'"
                         aria-label="Theme wechseln">
-                    <span x-show="darkMode === 'light'">🌙</span>
-                    <span x-show="darkMode === 'dark'">☀️</span>
+                    <span x-show="darkMode === 'light'">{{ icon_moon(18) }}</span>
+                    <span x-show="darkMode === 'dark'">{{ icon_sun(18) }}</span>
                 </button>
             </li>
         </ul>

@@ -2,6 +2,8 @@
 {% block title %}Matchbox — Event erstellen{% endblock %}
 
 {% block content %}
+{% from "icons.html" import icon_target, icon_zap, icon_handshake %}
+
 <section class="mb-hero">
     <h1 class="mb-hero-title">Matchbox</h1>
     <p class="mb-hero-subtitle">
@@ -9,15 +11,15 @@
     </p>
     <div class="mb-hero-features">
         <div class="mb-feature-chip">
-            <span class="mb-feature-icon">🎯</span>
+            {{ icon_target(16) }}
             <span>Algorithmus-basiertes Matching</span>
         </div>
         <div class="mb-feature-chip">
-            <span class="mb-feature-icon">⚡</span>
+            {{ icon_zap(16) }}
             <span>Echtzeit-Reveal</span>
         </div>
         <div class="mb-feature-chip">
-            <span class="mb-feature-icon">🤝</span>
+            {{ icon_handshake(16) }}
             <span>Romantisch & Professionell</span>
         </div>
     </div>

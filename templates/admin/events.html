@@ -1,0 +1,57 @@
+{% extends "admin/layout.html" %}
+{% block title %}Matchbox — Events (Admin){% endblock %}
+
+{% block admin_content %}
+<h2>Events</h2>
+
+<div class="mb-tabs">
+    <a href="/admin/events" class="mb-tab {{ 'active' if not status_filter }}">Alle</a>
+    <a href="/admin/events?status=open" class="mb-tab {{ 'active' if status_filter == 'open' }}">Offen</a>
+    <a href="/admin/events?status=revealed" class="mb-tab {{ 'active' if status_filter == 'revealed' }}">Abgeschlossen</a>
+</div>
+
+{% if events %}
+<table class="mb-admin-table">
+    <thead>
+        <tr>
+            <th>Event</th>
+            <th>Typ</th>
+            <th>Status</th>
+            <th>Ersteller</th>
+            <th>Datum</th>
+            <th>Aktionen</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for e in events %}
+        <tr>
+            <td><a href="/event/{{ e.id }}">{{ e.name }}</a></td>
+            <td>{{ e.event_type }}</td>
+            <td>
+                <span class="mb-role-badge {{ 'mb-role-badge-admin' if e.status == 'open' else 'mb-role-badge-host' }}">
+                    {{ e.status }}
+                </span>
+            </td>
+            <td>{{ e.owner_name or e.host_name }}</td>
+            <td>{{ e.event_date }}</td>
+            <td>
+                <a href="/event/{{ e.id }}" class="mb-btn-nav mb-btn-nav-outline mb-btn-sm">
+                    Öffnen
+                </a>
+                <form action="/admin/events/{{ e.id }}/loeschen" method="post" class="mb-inline-form"
+                      onsubmit="return confirm('Event wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')">
+                    <button type="submit" class="mb-btn-nav mb-btn-nav-outline mb-btn-sm mb-btn-sm--danger">
+                        Löschen
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="mb-empty-state">
+    <p>Keine Events gefunden.</p>
+</div>
+{% endif %}
+{% endblock %}

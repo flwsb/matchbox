@@ -2,12 +2,14 @@
 {% block title %}{{ event.name }} — Beitreten{% endblock %}
 
 {% block content %}
+{% from "icons.html" import icon_calendar, icon_person %}
+
 <section class="mb-event-banner">
     <h1>{{ event.name }}</h1>
     <p class="mb-event-description">{{ event.description }}</p>
     <div class="mb-event-meta">
-        <span class="mb-meta-chip">📅 {{ event.event_date }}</span>
-        <span class="mb-meta-chip">👤 {{ event.host_name }}</span>
+        <span class="mb-meta-chip">{{ icon_calendar(14) }} {{ event.event_date }}</span>
+        <span class="mb-meta-chip">{{ icon_person(14) }} {{ event.host_name }}</span>
     </div>
 </section>
 

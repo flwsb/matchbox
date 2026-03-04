@@ -514,6 +514,24 @@ async def get_matches_for_round(event_id: str, round_number: int) -> list[dict]:
         await db.close()
 
 
+async def get_all_event_matches(event_id: str) -> list[dict]:
+    """Get all matches for an event across all rounds."""
+    db = await get_db()
+    try:
+        cursor = await db.execute(
+            "SELECT m.*, ga.name as guest_a_name, gb.name as guest_b_name "
+            "FROM matches m "
+            "JOIN guests ga ON m.guest_a_id = ga.id "
+            "JOIN guests gb ON m.guest_b_id = gb.id "
+            "WHERE m.event_id = ? ORDER BY m.round, m.compatibility_score DESC",
+            (event_id,)
+        )
+        rows = await cursor.fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        await db.close()
+
+
 def generate_clue_for_guest(match_row: dict, for_side: str, clue_number: int) -> str:
     """
     Generate a clue about one guest for the other.

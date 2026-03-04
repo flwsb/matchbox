@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Matchbox — Meine Events{% endblock %}
+
+{% block content %}
+<section class="mb-hero" style="padding-bottom: 1rem;">
+    <h1 class="mb-hero-title">Meine Events</h1>
+</section>
+
+<div x-data="{ tab: 'upcoming' }">
+    <div class="mb-tabs">
+        <button class="mb-tab" :class="{ 'active': tab === 'upcoming' }" @click="tab = 'upcoming'">
+            Aktiv ({{ upcoming|length }})
+        </button>
+        <button class="mb-tab" :class="{ 'active': tab === 'past' }" @click="tab = 'past'">
+            Vergangen ({{ past|length }})
+        </button>
+    </div>
+
+    <div x-show="tab === 'upcoming'">
+        {% if upcoming %}
+        <div class="mb-event-list">
+            {% for e in upcoming %}
+            <a href="/event/{{ e.id }}" class="mb-event-item">
+                <div class="mb-event-item-info">
+                    <h3>{{ e.name }}</h3>
+                    <p>{{ e.event_date }} &middot; {{ e.event_type }}</p>
+                </div>
+                <div class="mb-event-item-meta">
+                    <span class="mb-role-badge {{ 'mb-role-badge-admin' if e.status == 'open' else 'mb-role-badge-host' }}">
+                        {{ e.status }}
+                    </span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="mb-empty-state">
+            <p>Du hast noch keine aktiven Events.</p>
+            <a href="/" class="mb-btn-nav mb-btn-nav-primary">Neues Event erstellen</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div x-show="tab === 'past'" x-cloak>
+        {% if past %}
+        <div class="mb-event-list">
+            {% for e in past %}
+            <a href="/meine-events/{{ e.id }}/ergebnisse" class="mb-event-item">
+                <div class="mb-event-item-info">
+                    <h3>{{ e.name }}</h3>
+                    <p>{{ e.event_date }} &middot; {{ e.event_type }} &middot; {{ e.current_round }} Runde(n)</p>
+                </div>
+                <div class="mb-event-item-meta">
+                    <span class="mb-role-badge mb-role-badge-host">Abgeschlossen</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="mb-empty-state">
+            <p>Keine vergangenen Events.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

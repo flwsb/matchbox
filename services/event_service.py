@@ -5,16 +5,17 @@ from database import get_db
 async def create_event(name: str, event_type: str, description: str,
                        event_date: str, host_name: str,
                        min_age: int | None = None, max_age: int | None = None,
-                       max_rounds: int = 3) -> str:
+                       max_rounds: int = 3,
+                       owner_id: str | None = None) -> str:
     event_id = str(uuid.uuid4())
     db = await get_db()
     try:
         await db.execute(
             "INSERT INTO events (id, name, event_type, description, event_date, "
-            "host_name, min_age, max_age, max_rounds) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "host_name, min_age, max_age, max_rounds, owner_id) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (event_id, name, event_type, description, event_date, host_name,
-             min_age, max_age, max_rounds)
+             min_age, max_age, max_rounds, owner_id)
         )
         await db.commit()
     finally:
@@ -96,3 +97,76 @@ async def update_clues_sent(event_id: str, count: int):
 
 async def reset_clues_sent(event_id: str):
     await update_clues_sent(event_id, 0)
+
+
+async def get_events_by_owner(owner_id: str) -> list[dict]:
+    db = await get_db()
+    try:
+        cursor = await db.execute(
+            "SELECT * FROM events WHERE owner_id = ? ORDER BY event_date DESC",
+            (owner_id,),
+        )
+        rows = await cursor.fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        await db.close()
+
+
+async def get_all_events(offset: int = 0, limit: int = 50,
+                         status_filter: str | None = None) -> list[dict]:
+    db = await get_db()
+    try:
+        if status_filter:
+            cursor = await db.execute(
+                "SELECT e.*, u.display_name as owner_name "
+                "FROM events e LEFT JOIN users u ON e.owner_id = u.id "
+                "WHERE e.status = ? ORDER BY e.created_at DESC LIMIT ? OFFSET ?",
+                (status_filter, limit, offset),
+            )
+        else:
+            cursor = await db.execute(
+                "SELECT e.*, u.display_name as owner_name "
+                "FROM events e LEFT JOIN users u ON e.owner_id = u.id "
+                "ORDER BY e.created_at DESC LIMIT ? OFFSET ?",
+                (limit, offset),
+            )
+        rows = await cursor.fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        await db.close()
+
+
+async def get_admin_stats() -> dict:
+    db = await get_db()
+    try:
+        stats = {}
+        for table, key in [("users", "total_users"), ("events", "total_events"),
+                           ("guests", "total_guests"), ("matches", "total_matches")]:
+            cursor = await db.execute(f"SELECT COUNT(*) as cnt FROM {table}")
+            row = await cursor.fetchone()
+            stats[key] = row["cnt"]
+
+        cursor = await db.execute(
+            "SELECT COUNT(*) as cnt FROM events WHERE status IN ('open', 'closed', 'matching', 'clues')"
+        )
+        row = await cursor.fetchone()
+        stats["active_events"] = row["cnt"]
+        return stats
+    finally:
+        await db.close()
+
+
+async def delete_event(event_id: str):
+    db = await get_db()
+    try:
+        # Delete in order respecting foreign keys
+        await db.execute("DELETE FROM matches WHERE event_id = ?", (event_id,))
+        await db.execute(
+            "DELETE FROM answers WHERE guest_id IN "
+            "(SELECT id FROM guests WHERE event_id = ?)", (event_id,)
+        )
+        await db.execute("DELETE FROM guests WHERE event_id = ?", (event_id,))
+        await db.execute("DELETE FROM events WHERE id = ?", (event_id,))
+        await db.commit()
+    finally:
+        await db.close()

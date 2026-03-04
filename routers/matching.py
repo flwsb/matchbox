@@ -3,6 +3,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
+from middleware.auth import get_current_user
 from services.event_service import (
     get_event, update_event_status, increment_round,
     update_clues_sent, reset_clues_sent,

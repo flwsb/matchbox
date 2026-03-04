@@ -23,7 +23,7 @@
                     class="mb-likert-btn"
                     :class="{ 'mb-likert-selected': answers[currentQuestion.id] === option.value }"
                     @click="selectAnswer(option.value)">
-                    <span class="mb-likert-emoji" x-text="option.emoji"></span>
+                    <span class="mb-likert-number" x-text="option.value"></span>
                     <span x-text="option.label"></span>
                 </button>
             </template>
@@ -64,11 +64,11 @@ function questionnaire() {
         currentIndex: 0,
         answers: {},
         options: [
-            { value: 1, label: 'Stimme gar nicht zu', emoji: '😟' },
-            { value: 2, label: 'Stimme eher nicht zu', emoji: '🙁' },
-            { value: 3, label: 'Neutral', emoji: '😐' },
-            { value: 4, label: 'Stimme eher zu', emoji: '🙂' },
-            { value: 5, label: 'Stimme voll zu', emoji: '😄' },
+            { value: 1, label: 'Stimme gar nicht zu' },
+            { value: 2, label: 'Stimme eher nicht zu' },
+            { value: 3, label: 'Neutral' },
+            { value: 4, label: 'Stimme eher zu' },
+            { value: 5, label: 'Stimme voll zu' },
         ],
         get currentQuestion() {
             return this.questions[this.currentIndex] || {};

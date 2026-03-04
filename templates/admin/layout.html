@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-admin-layout">
+    <aside class="mb-admin-sidebar">
+        <h3>Administration</h3>
+        <nav>
+            <ul>
+                <li>
+                    <a href="/admin" class="{{ 'active' if active_page == 'dashboard' }}">Übersicht</a>
+                </li>
+                <li>
+                    <a href="/admin/benutzer" class="{{ 'active' if active_page == 'users' }}">Benutzer</a>
+                </li>
+                <li>
+                    <a href="/admin/events" class="{{ 'active' if active_page == 'events' }}">Events</a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+    <div class="mb-admin-content">
+        {% block admin_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

@@ -10,7 +10,7 @@
 
     <!-- Waiting Phase -->
     <div x-show="phase === 'waiting'" class="mb-phase-section">
-        <span class="mb-waiting-icon">🔥</span>
+        <div class="mb-waiting-indicator"></div>
         <h1>Warte auf den Reveal...</h1>
         <p>Du bist dabei! Sobald der Host das Matching startet, geht es los.</p>
         <p><span x-text="connectedCount"></span> Gäste verbunden</p>
@@ -110,7 +110,7 @@
     <div x-show="showConfetti" class="confetti-container">
         <template x-for="i in 50">
             <div class="confetti-piece"
-                 :style="`left: ${Math.random() * 100}%; animation-delay: ${Math.random() * 3}s; background: ${['#E8553A','#F59E0B','#8B5CF6','#22C55E','#EC4899'][i % 5]};`">
+                 :style="`left: ${Math.random() * 100}%; animation-delay: ${Math.random() * 3}s; background: ${['#6D28D9','#A78BFA','#E11D48','#059669','#D97706'][i % 5]};`">
             </div>
         </template>
     </div>

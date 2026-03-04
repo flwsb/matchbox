@@ -59,3 +59,23 @@ class MatchOut(BaseModel):
     compatibility_score: float
     match_type: str
     top_shared_values: list[str]
+
+
+# --- Auth models ---
+
+class UserCreate(BaseModel):
+    email: str
+    password: str
+    display_name: str
+
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    display_name: str
+    role: str

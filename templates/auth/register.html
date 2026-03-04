@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Matchbox — Registrieren{% endblock %}
+
+{% block content %}
+<section class="mb-hero">
+    <h1>Registrieren</h1>
+    <p class="mb-hero-subtitle">Erstelle ein Konto, um Events zu erstellen und zu verwalten.</p>
+</section>
+
+<article class="mb-form-card">
+    {% if error %}
+    <div class="mb-alert mb-alert-error">{{ error }}</div>
+    {% endif %}
+
+    <form action="/registrieren" method="post">
+        <label for="display_name">Anzeigename</label>
+        <input type="text" id="display_name" name="display_name" placeholder="Dein Name" required
+               value="{{ display_name or '' }}">
+
+        <label for="email">E-Mail</label>
+        <input type="email" id="email" name="email" placeholder="deine@email.de" required
+               value="{{ email or '' }}">
+
+        <label for="password">Passwort</label>
+        <input type="password" id="password" name="password" placeholder="Mindestens 8 Zeichen" required
+               minlength="8">
+
+        <label for="password_confirm">Passwort bestätigen</label>
+        <input type="password" id="password_confirm" name="password_confirm"
+               placeholder="Passwort wiederholen" required minlength="8">
+
+        <button type="submit" class="mb-btn-primary">Konto erstellen</button>
+    </form>
+
+    <p class="mb-form-footer">
+        Bereits registriert? <a href="/anmelden">Anmelden</a>
+    </p>
+</article>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Matchbox — Ergebnisse: {{ event.name }}{% endblock %}
+
+{% block content %}
+<section class="mb-hero" style="padding-bottom: 1rem;">
+    <h1 class="mb-hero-title">{{ event.name }}</h1>
+    <p class="mb-hero-subtitle">{{ event.event_date }} &middot; {{ event.event_type }} &middot; {{ event.current_round }} Runde(n)</p>
+</section>
+
+<div class="mb-stats-grid">
+    <div class="mb-stat-card">
+        <div class="mb-stat-value">{{ stats.total_guests }}</div>
+        <div class="mb-stat-label">Gäste</div>
+    </div>
+    <div class="mb-stat-card">
+        <div class="mb-stat-value">{{ stats.completed_questionnaire }}</div>
+        <div class="mb-stat-label">Fragebogen ausgefüllt</div>
+    </div>
+    <div class="mb-stat-card">
+        <div class="mb-stat-value">{{ matches|length }}</div>
+        <div class="mb-stat-label">Matches</div>
+    </div>
+</div>
+
+{% if matches %}
+<h3>Alle Matches</h3>
+<table class="mb-admin-table">
+    <thead>
+        <tr>
+            <th>Runde</th>
+            <th>Gast A</th>
+            <th>Gast B</th>
+            <th>Kompatibilität</th>
+            <th>Typ</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for m in matches %}
+        <tr>
+            <td>{{ m.round }}</td>
+            <td>{{ m.guest_a_name }}</td>
+            <td>{{ m.guest_b_name }}</td>
+            <td>{{ "%.0f"|format(m.compatibility_score * 100) }}%</td>
+            <td>
+                <span class="mb-role-badge mb-role-badge-host">{{ m.match_type }}</span>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="mb-empty-state">
+    <p>Keine Matches für dieses Event.</p>
+</div>
+{% endif %}
+
+<p class="mb-mt-2">
+    <a href="/meine-events">&larr; Zurück zu meinen Events</a>
+</p>
+{% endblock %}

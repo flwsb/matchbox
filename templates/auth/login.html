@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Matchbox — Anmelden{% endblock %}
+
+{% block content %}
+<section class="mb-hero">
+    <h1>Anmelden</h1>
+    <p class="mb-hero-subtitle">Melde dich an, um deine Events zu verwalten.</p>
+</section>
+
+<article class="mb-form-card">
+    {% if error %}
+    <div class="mb-alert mb-alert-error">{{ error }}</div>
+    {% endif %}
+
+    <form action="/anmelden" method="post">
+        <label for="email">E-Mail</label>
+        <input type="email" id="email" name="email" placeholder="deine@email.de" required
+               value="{{ email or '' }}">
+
+        <label for="password">Passwort</label>
+        <input type="password" id="password" name="password" placeholder="Dein Passwort" required>
+
+        <button type="submit" class="mb-btn-primary">Anmelden</button>
+    </form>
+
+    <p class="mb-form-footer">
+        Noch kein Konto? <a href="/registrieren">Jetzt registrieren</a>
+    </p>
+</article>
+{% endblock %}

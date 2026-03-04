@@ -2,13 +2,15 @@
 {% block title %}{{ event.name }} — Dashboard{% endblock %}
 
 {% block content %}
+{% from "icons.html" import icon_person, icon_calendar, icon_heart, icon_briefcase %}
+
 <section class="mb-event-banner">
     <h1>{{ event.name }}</h1>
     <div class="mb-event-meta">
-        <span class="mb-meta-chip">👤 {{ event.host_name }}</span>
-        <span class="mb-meta-chip">📅 {{ event.event_date }}</span>
+        <span class="mb-meta-chip">{{ icon_person(14) }} {{ event.host_name }}</span>
+        <span class="mb-meta-chip">{{ icon_calendar(14) }} {{ event.event_date }}</span>
         <span class="mb-meta-chip">
-            {% if event.event_type == 'romantic' %}💕 Romantisch{% else %}🤝 Professionell{% endif %}
+            {% if event.event_type == 'romantic' %}{{ icon_heart(14) }} Romantisch{% else %}{{ icon_briefcase(14) }} Professionell{% endif %}
         </span>
     </div>
     {% if event.min_age or event.max_age %}

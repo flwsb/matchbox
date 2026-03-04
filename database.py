@@ -2,6 +2,26 @@ import aiosqlite
 from config import DATABASE_PATH
 
 SCHEMA = """
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'host' CHECK(role IN ('host', 'admin')),
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    last_login TEXT
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    expires_at TEXT NOT NULL,
+    ip_address TEXT,
+    user_agent TEXT
+);
+
 CREATE TABLE IF NOT EXISTS events (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -15,7 +35,8 @@ CREATE TABLE IF NOT EXISTS events (
     max_age INTEGER,
     current_round INTEGER NOT NULL DEFAULT 0,
     max_rounds INTEGER NOT NULL DEFAULT 3,
-    clues_sent INTEGER NOT NULL DEFAULT 0
+    clues_sent INTEGER NOT NULL DEFAULT 0,
+    owner_id TEXT REFERENCES users(id)
 );
 
 CREATE TABLE IF NOT EXISTS guests (
@@ -70,6 +91,7 @@ MIGRATIONS = [
     "ALTER TABLE guests ADD COLUMN age INTEGER",
     "ALTER TABLE matches ADD COLUMN round INTEGER NOT NULL DEFAULT 1",
     "ALTER TABLE matches ADD COLUMN insights_json TEXT",
+    "ALTER TABLE events ADD COLUMN owner_id TEXT REFERENCES users(id)",
 ]
 
 

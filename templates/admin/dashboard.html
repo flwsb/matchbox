@@ -1,0 +1,37 @@
+{% extends "admin/layout.html" %}
+{% block title %}Matchbox — Admin{% endblock %}
+
+{% block admin_content %}
+<h2>Übersicht</h2>
+
+<div class="mb-stats-grid">
+    <div class="mb-stat-card">
+        <div class="mb-stat-value">{{ stats.total_users }}</div>
+        <div class="mb-stat-label">Benutzer</div>
+    </div>
+    <div class="mb-stat-card">
+        <div class="mb-stat-value">{{ stats.total_events }}</div>
+        <div class="mb-stat-label">Events</div>
+    </div>
+    <div class="mb-stat-card">
+        <div class="mb-stat-value">{{ stats.active_events }}</div>
+        <div class="mb-stat-label">Aktive Events</div>
+    </div>
+    <div class="mb-stat-card">
+        <div class="mb-stat-value">{{ stats.total_guests }}</div>
+        <div class="mb-stat-label">Gäste</div>
+    </div>
+    <div class="mb-stat-card">
+        <div class="mb-stat-value">{{ stats.total_matches }}</div>
+        <div class="mb-stat-label">Matches</div>
+    </div>
+</div>
+
+<div class="mb-quick-access-grid">
+    <article>
+        <header><h3>Schnellzugriff</h3></header>
+        <p><a href="/admin/benutzer">Benutzer verwalten</a></p>
+        <p><a href="/admin/events">Events verwalten</a></p>
+    </article>
+</div>
+{% endblock %}

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, Form, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
+from middleware.auth import get_current_user
 from models import GuestCreate, AnswersSubmit
 from services.event_service import get_event
 from services.guest_service import (
